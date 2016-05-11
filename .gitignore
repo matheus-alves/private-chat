@@ -1,0 +1,5 @@
+# IDE-specific stuff:
+.idea/*
+
+# Node js libraries
+node_modules/*
