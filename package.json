@@ -1,0 +1,11 @@
+{
+  "name": "private-chat",
+  "author": "Matheus Alves",
+  "main": "server.js",
+  "scripts": {
+    "test": "istanbul cover tape \"test/**/*.js\""
+  },
+  "dependencies": {
+    "restify": "^4.0.4"
+  }
+}
