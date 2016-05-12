@@ -12,8 +12,9 @@ In order to run the server simply clone it from this github repository and perfo
 
     1. npm install
     2. node server.js <PORT>
+    3. access chat on <HOST>:<PORT>/chat
 
-Where *PORT* is optional and defaults to 8080
+Where the *PORT* parameter on step 2 is optional and defaults to 8080
 
 ## Unit Tests
 
