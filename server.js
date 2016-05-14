@@ -35,6 +35,9 @@ server.pre(function (req, res, next) {
 });
 
 // Requests configuration
+server.post('/register', controllers.users.registerUser);
+server.get('/users', controllers.users.getUsers);
+
 server.get('/', restify.serveStatic({
     directory: './static',
     file: 'index.html'
@@ -43,8 +46,6 @@ server.get('/', restify.serveStatic({
 server.get(/\/?.*/, restify.serveStatic({
     directory: './static'
 }));
-
-server.post('/register', controllers.users.registerUser);
 
 function setupServer (callback) {
     dbConnection.setupDbConnection(callback);

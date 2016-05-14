@@ -2,14 +2,24 @@
  * Created by Matheus Alves on 14/05/2016.
  */
 
-// TODO remove these hardcoded sample values
-var users = {
-    userA: 2,
-    userB: 3
-};
+'use strict';
 
-function UsersController ($scope, $state) {
-    $scope.users = users;
+// Constants
+var GET_USERS_TIMEOUT = 5000; //five seconds
+
+function UsersController ($scope, $state, $http, $location, $timeout) {
+    $scope.users = {};
+    
+    function getUsers () {
+        $http.get(buildUrl($location, '/users')).
+        then(function(response) {
+            $scope.users = response.data;
+            $timeout(getUsers, GET_USERS_TIMEOUT);
+        }, function(error) {
+            alert('Error fetching users');
+        });
+    }
+    getUsers();
     
     $scope.selectUser = function (selectedUser) {
         // TODO server communication
