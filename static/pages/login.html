@@ -13,6 +13,15 @@
             <button class="btn btn-lg btn-primary btn-block" type="submit" ng-click="validateLogin()">Login</button>
             <button class="btn btn-lg btn-primary btn-block" type="submit" ng-click="validateRegistry()">Register</button>
         </div>
+
+        <modal visible="showModal" backdrop="static"">
+            <modal-body>
+                <h4>{{modalText}}</h4>
+            </modal-body>
+            <modal-footer>
+                <button class="btn btn-primary" ng-click="hideModal()">OK</button>
+            </modal-footer>
+        </modal>
     </form>
 
 </div>

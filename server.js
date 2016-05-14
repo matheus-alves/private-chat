@@ -8,6 +8,7 @@ var restify = require('restify');
 
 var logger = console;
 var httpStatusCodes = require('./api/httpstatuscodes.js');
+var dbConnection = require('./database/dbConnection.js');
 
 // Constants
 var DEFAULT_HTTP_PORT = 8080;
@@ -20,8 +21,18 @@ server.use(restify.fullResponse());
 server.use(restify.queryParser());
 server.use(restify.bodyParser({mapParams: true}));
 
+// Controllers
+var controllersPath = './controllers/';
+var controllers = {
+    users: require(controllersPath + 'users.js')
+};
+
 // Server configuration
 server.pre(restify.sanitizePath());
+server.pre(function (req, res, next) {
+    req.dbConnection = dbConnection.getConnection();
+    return next();
+});
 
 // Requests configuration
 server.get('/', restify.serveStatic({
@@ -33,9 +44,10 @@ server.get(/\/?.*/, restify.serveStatic({
     directory: './static'
 }));
 
+server.post('/register', controllers.users.registerUser);
+
 function setupServer (callback) {
-    // TODO server setup promises
-    return callback(null);
+    dbConnection.setupDbConnection(callback);
 }
 
 function logError (error) {

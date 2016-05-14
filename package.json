@@ -2,10 +2,9 @@
   "name": "private-chat",
   "author": "Matheus Alves",
   "main": "server.js",
-  "scripts": {
-    "test": "istanbul cover tape \"test/**/*.js\""
-  },
   "dependencies": {
-    "restify": "^4.0.4"
+    "fnv-plus": "^1.2.12",
+    "restify": "^4.0.4",
+    "sqlite3": "^3.1.3"
   }
 }
