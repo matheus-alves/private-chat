@@ -4,7 +4,25 @@
 
 'use strict';
 
-var privateChatApp = angular.module('privateChat', []);
+var privateChatApp = angular.module('privateChat', ['ui.router']);
+
+privateChatApp.config(function($stateProvider, $urlRouterProvider) {
+    $urlRouterProvider.otherwise('/login');
+
+    $stateProvider.state('login', {
+        url: '/login',
+        templateUrl: 'pages/login.html'
+    }).state('chat', {
+        url: '/chat',
+        params: {
+            username: null
+        },
+        templateUrl: 'pages/chat.html',
+        controller: function($stateParams){
+            console.log($stateParams.username);
+        }
+    });
+});
 
 // TODO remove these hardcoded sample values
 var users = {
