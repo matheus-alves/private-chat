@@ -36,6 +36,7 @@ server.pre(function (req, res, next) {
 
 // Requests configuration
 server.post('/register', controllers.users.registerUser);
+server.post('/login', controllers.users.authenticateUser);
 server.get('/users', controllers.users.getUsers);
 
 server.get('/', restify.serveStatic({

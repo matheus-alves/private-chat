@@ -18,9 +18,6 @@ privateChatApp.config(function($stateProvider, $urlRouterProvider) {
             username: null
         },
         templateUrl: 'pages/chat.html',
-        controller: function($stateParams){
-            console.log($stateParams.username);
-        },
         resolve: {
             username: ['$stateParams', function ($stateParams) {
                 return $stateParams.username;
