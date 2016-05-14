@@ -34,8 +34,17 @@ function LoginController ($scope, $state, $http, $location) {
         if (!validateParams()) {
             showModal('Please provide a valid username and password');
         } else {
-            // TODO server communication
-            $state.go('chat', {username: $scope.username})
+            var loginData = {
+                username: $scope.username,
+                password: $scope.password
+            };
+
+            $http.post(buildUrl($location, '/login'), loginData).
+            then(function(response) {
+                $state.go('chat', {username: $scope.username});
+            }, function(error) {
+                showModal('Error authenticating user : ' + error.data);
+            });
         }
     };
     $scope.validateRegistry = function () {

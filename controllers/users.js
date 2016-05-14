@@ -9,6 +9,28 @@ var fnv = require('fnv-plus');
 var logger = console;
 var httpStatusCodes = require('../api/httpstatuscodes.js');
 
+function fetchUser (dbConnection, username, callback) {
+    dbConnection.get('SELECT * FROM Users WHERE name = ?', username, function (error, row) {
+        if (error) {
+            logger.error('Error fetching user: %s', error);
+            return callback(error, null);
+        }
+
+        return callback(null, row);
+    });
+}
+
+function fetchUsers (dbConnection, callback) {
+    dbConnection.all('SELECT * FROM Users', function (error, rows) {
+        if (error) {
+            logger.error('Error fetching users: %s', error);
+            return callback(error, null);
+        }
+
+        return callback(null, rows);
+    });
+}
+
 function insertUser (dbConnection, userInfo, callback) {
     var passwordHash = fnv.hash(userInfo.password);
 
@@ -53,6 +75,14 @@ function validateDbConnection (req, res) {
     }
 }
 
+function validateBody (req, res) {
+    if (!req.body) {
+        var errorMessage = 'Missing mandatory body';
+        logger.error(errorMessage);
+        return res.send(httpStatusCodes.BadRequest, errorMessage);
+    }
+}
+
 function sendDatabaseErrorResponse (res) {
     var errorMessage = 'Database error';
     logger.error(errorMessage);
@@ -64,11 +94,7 @@ function registerUser (req, res, next) {
 
     logger.info('Received register user request');
 
-    if (!req.body) {
-        var errorMessage = 'Missing mandatory body';
-        logger.error(errorMessage);
-        return res.send(httpStatusCodes.BadRequest, errorMessage);
-    }
+    validateBody(req, res);
     
     checkIfUsernameAvailable(req.dbConnection, req.body.username, function (error, available) {
         if (error) {
@@ -91,14 +117,30 @@ function registerUser (req, res, next) {
     });
 }
 
-function fetchUsers (dbConnection, callback) {
-    dbConnection.all('SELECT * FROM Users', function (error, rows) {
+function authenticateUser (req, res, next) {
+    validateDbConnection(req, res);
+
+    logger.info('Received authenticate user request');
+
+    validateBody(req, res);
+
+    fetchUser(req.dbConnection, req.body.username, function (error, result) {
         if (error) {
-            logger.error('Error fetching users: %s', error);
-            return callback(error, null);
+            return sendDatabaseErrorResponse(res);
         }
 
-        return callback(null, rows);
+        if (result) {
+            var passwordHash = fnv.hash(req.body.password);
+
+            if (passwordHash.dec() === result.passwordHash) {
+                logger.info('User %s successfully authenticated', result.name);
+                return res.send(httpStatusCodes.OK, '');
+            }
+        }
+
+        var errorMessage = 'Invalid username or password';
+        logger.error(errorMessage);
+        return res.send(httpStatusCodes.Unauthorized, errorMessage);
     });
 }
 
@@ -124,5 +166,6 @@ function getUsers (req, res, next) {
 
 module.exports = {
     registerUser: registerUser,
-    getUsers: getUsers
+    getUsers: getUsers,
+    authenticateUser: authenticateUser
 };
