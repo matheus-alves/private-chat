@@ -4,7 +4,19 @@
 
 'use strict';
 
-function LoginController ($scope, $state) {
+function LoginController ($scope, $state, $http, $location) {
+    $scope.showModal = false;
+    $scope.modalText = '';
+
+    $scope.hideModal = function(){
+        $scope.showModal = false;
+    };
+    
+    function showModal (message) {
+        $scope.modalText = message;
+        $scope.showModal = true;
+    }
+
     function validateParams () {
         if ($scope.username && $scope.password) {
             $scope.username = $scope.username.trim();
@@ -20,7 +32,7 @@ function LoginController ($scope, $state) {
 
     $scope.validateLogin = function () {
         if (!validateParams()) {
-            alert('Please provide a valid username and password');
+            showModal('Please provide a valid username and password');
         } else {
             // TODO server communication
             $state.go('chat', {username: $scope.username})
@@ -28,10 +40,19 @@ function LoginController ($scope, $state) {
     };
     $scope.validateRegistry = function () {
         if (!validateParams()) {
-            alert('Please provide a valid username and password');
+            showModal('Please provide a valid username and password');
         } else {
-            // TODO server communication
-            $state.go('chat', {username: $scope.username})
+            var registryData = {
+                username: $scope.username,
+                password: $scope.password
+            };
+
+            $http.post(buildUrl($location, '/register'), registryData).
+            then(function(response) {
+                $state.go('chat', {username: $scope.username});
+            }, function(error) {
+                showModal('Error registering user : ' + error.data);
+            });
         }
     };
 }

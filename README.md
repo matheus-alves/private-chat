@@ -15,9 +15,3 @@ In order to run the server simply clone it from this github repository and perfo
     3. access chat on <HOST>:<PORT>/
 
 Where the *PORT* parameter on step 2 is optional and defaults to 8080
-
-## Unit Tests
-
-In order to run the unit tests use the following command:
-
-    npm test
