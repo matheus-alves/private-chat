@@ -5,7 +5,7 @@
 'use strict';
 
 function PrivateChatController ($scope, $stateParams) {
-    // TODO retrive messages from server
+    // TODO retrieve messages from server
     $scope.messages = [];
 
     $scope.sendMessage = function () {
