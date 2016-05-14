@@ -24,7 +24,7 @@ server.use(restify.bodyParser({mapParams: true}));
 server.pre(restify.sanitizePath());
 
 // Requests configuration
-server.get('/chat', restify.serveStatic({
+server.get('/', restify.serveStatic({
     directory: './static',
     file: 'index.html'
 }));
