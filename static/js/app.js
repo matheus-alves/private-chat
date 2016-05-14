@@ -4,7 +4,7 @@
 
 'use strict';
 
-var privateChatApp = angular.module('privateChat', ['ui.router']);
+var privateChatApp = angular.module('privateChat', ['ui.router', 'luegg.directives']);
 
 privateChatApp.config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise('/login');
@@ -20,22 +20,19 @@ privateChatApp.config(function($stateProvider, $urlRouterProvider) {
         templateUrl: 'pages/chat.html',
         controller: function($stateParams){
             console.log($stateParams.username);
+        },
+        resolve: {
+            username: ['$stateParams', function ($stateParams) {
+                return $stateParams.username;
+            }]
+        }
+    }).state('chat.private', {
+        url: '/:otherUser',
+        templateUrl: 'pages/private.html',
+        controller: function($stateParams, username){
+            console.log('Starting private chat');
+            console.log(username);
+            console.log($stateParams.otherUser);
         }
     });
 });
-
-// TODO remove these hardcoded sample values
-var users = {
-    userA: 2,
-    userB: 3
-};
-
-function UsersController ($scope) {
-    $scope.users = users;
-    $scope.selectUser = function (user) {
-        var element = angular.element( document.querySelector( '#chatArea' ) );
-        element.html(user);
-    }
-}
-
-privateChatApp.controller('users', UsersController);

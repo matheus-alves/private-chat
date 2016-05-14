@@ -1,0 +1,25 @@
+<!-- Custom styles for this template -->
+<link href="../css/private.css" rel="stylesheet">
+
+
+<div class="panel panel-primary" ng-app="privateChat" ng-controller="private">
+    <div class="panel-body" scroll-glue>
+        <ul class="chat">
+            <li class="right" ng-repeat="message in messages">
+                <div class="chat-body right">
+                    <strong>{{message.origin}}</strong>
+                    <p>{{message.value}}</p>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <div class="panel-footer">
+        <div class="input-group">
+            <!-- submit message on enter key press -->
+            <input id="btn-input" type="text" class="form-control input-sm" ng-model="typedMessage" ng-keypress="($event.which === 13)?sendMessage():0" placeholder="Type your message here..." />
+                <span class="input-group-btn">
+                    <button class="btn btn-primary btn-sm" ng-click="sendMessage()">Send</button>
+                </span>
+        </div>
+    </div>
+</div>
