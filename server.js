@@ -40,6 +40,7 @@ server.pre(function (req, res, next) {
 server.post('/register', controllers.users.registerUser);
 server.post('/login', controllers.users.authenticateUser);
 server.get('/users/:user', controllers.users.getUsers, controllers.messages.getUnreadMessagesCount);
+server.get('/history/:user/:otherUser', controllers.messages.getHistory);
 
 server.get('/', restify.serveStatic({
     directory: './static',
@@ -74,7 +75,7 @@ function startServer () {
             socket.on('sendMessage', function (data) {
                 webSocket.sockets.emit('message/' + data.origin + '/' + data.target, data.value);
                 webSocket.sockets.emit('newMessage/' + data.target, data.origin);
-                controllers.messages.addNewMessage(data);
+                controllers.messages.addNewMessage(data, dbConnection.getConnection());
             });
         });
 
