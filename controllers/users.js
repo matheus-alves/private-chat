@@ -8,6 +8,7 @@ var fnv = require('fnv-plus');
 
 var logger = console;
 var httpStatusCodes = require('../api/httpstatuscodes.js');
+var utils = require('./utils.js');
 
 function fetchUser (dbConnection, username, callback) {
     dbConnection.get('SELECT * FROM Users WHERE name = ?', username, function (error, row) {
@@ -67,38 +68,16 @@ function checkIfUsernameAvailable (dbConnection, username, callback) {
     });
 }
 
-function validateDbConnection (req, res) {
-    if (!req.dbConnection) {
-        var errorMessage = 'Lost database connection';
-        logger.error(errorMessage);
-        return res.send(httpStatusCodes.InternalServerError, errorMessage);
-    }
-}
-
-function validateBody (req, res) {
-    if (!req.body) {
-        var errorMessage = 'Missing mandatory body';
-        logger.error(errorMessage);
-        return res.send(httpStatusCodes.BadRequest, errorMessage);
-    }
-}
-
-function sendDatabaseErrorResponse (res) {
-    var errorMessage = 'Database error';
-    logger.error(errorMessage);
-    return res.send(httpStatusCodes.InternalServerError, errorMessage);
-}
-
 function registerUser (req, res, next) {
-    validateDbConnection(req, res);
+    utils.validateDbConnection(req, res);
 
     logger.info('Received register user request');
 
-    validateBody(req, res);
+    utils.validateBody(req, res);
     
     checkIfUsernameAvailable(req.dbConnection, req.body.username, function (error, available) {
         if (error) {
-            return sendDatabaseErrorResponse(res);
+            return utils.sendDatabaseErrorResponse(res);
         }
 
         if (!available) {
@@ -109,7 +88,7 @@ function registerUser (req, res, next) {
 
         insertUser(req.dbConnection, req.body, function (error) {
             if (error) {
-                return sendDatabaseErrorResponse(res);
+                return utils.sendDatabaseErrorResponse(res);
             }
 
             return res.send(httpStatusCodes.Created, '');
@@ -118,15 +97,15 @@ function registerUser (req, res, next) {
 }
 
 function authenticateUser (req, res, next) {
-    validateDbConnection(req, res);
+    utils.validateDbConnection(req, res);
 
     logger.info('Received authenticate user request');
 
-    validateBody(req, res);
+    utils.validateBody(req, res);
 
     fetchUser(req.dbConnection, req.body.username, function (error, result) {
         if (error) {
-            return sendDatabaseErrorResponse(res);
+            return utils.sendDatabaseErrorResponse(res);
         }
 
         if (result) {
@@ -145,11 +124,11 @@ function authenticateUser (req, res, next) {
 }
 
 function getUsers (req, res, next) {
-    validateDbConnection(req, res);
+    utils.validateDbConnection(req, res);
 
     fetchUsers(req.dbConnection, function (error, results) {
         if (error) {
-            return sendDatabaseErrorResponse(res);
+            return utils.sendDatabaseErrorResponse(res);
         }
 
         var users = [];
@@ -171,5 +150,6 @@ function getUsers (req, res, next) {
 module.exports = {
     registerUser: registerUser,
     getUsers: getUsers,
-    authenticateUser: authenticateUser
+    authenticateUser: authenticateUser,
+    fetchUser: fetchUser
 };

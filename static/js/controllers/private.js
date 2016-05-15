@@ -4,9 +4,18 @@
 
 'use strict';
 
-function PrivateChatController ($scope, $stateParams, webSocket) {
-    // TODO retrieve messages from server
+function PrivateChatController ($scope, $stateParams, $http, $location, webSocket) {
     $scope.messages = [];
+
+    function getHistory () {
+        $http.get(buildUrl($location, '/history/' + $stateParams.username + '/' + $stateParams.otherUser)).
+        then(function(response) {
+            $scope.messages = response.data;
+        }, function(error) {
+            alert('Error fetching history');
+        });
+    }
+    getHistory();
 
     webSocket.on('message/' + $stateParams.otherUser + '/' + $stateParams.username, function (data) {
         $scope.messages.push({origin: $stateParams.otherUser, value: data});

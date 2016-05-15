@@ -11,12 +11,10 @@ function UsersController ($scope, $state, $stateParams, $http, $location, $timeo
     $scope.users = {};
 
     function getUsers () {
-        $http.get(buildUrl($location, '/users/' + $stateParams.username)).
+        $http.get(buildUrl($location, '/users/' + $stateParams.username + '?otherUser=' + $stateParams.otherUser)).
         then(function(response) {
             for (var user in response.data) {
-                if (!$scope.users[user]) { // only add new users
-                    $scope.users[user] = response.data[user];
-                }
+                $scope.users[user] = response.data[user];
             }
 
             $timeout(getUsers, GET_USERS_TIMEOUT);
@@ -27,13 +25,12 @@ function UsersController ($scope, $state, $stateParams, $http, $location, $timeo
     getUsers();
 
     webSocket.on('newMessage/' + $stateParams.username, function (data) {
-        if ($stateParams.otherUser != data) { // only count unread messages
+        if (data != $stateParams.otherUser) { // only count unread messages
             $scope.users[data]++;
         }
     });
 
     $scope.selectUser = function (selectedUser) {
-        // TODO server communication
         $scope.users[selectedUser] = 0;
         $state.go('chat.private', {otherUser: selectedUser});
     }
