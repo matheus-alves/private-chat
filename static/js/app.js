@@ -4,7 +4,11 @@
 
 'use strict';
 
-var privateChatApp = angular.module('privateChat', ['ui.router', 'luegg.directives']);
+var privateChatApp = angular.module('privateChat', [
+    'ui.router',
+    'luegg.directives',
+    'btford.socket-io'
+]);
 
 privateChatApp.config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise('/login');
@@ -25,12 +29,7 @@ privateChatApp.config(function($stateProvider, $urlRouterProvider) {
         }
     }).state('chat.private', {
         url: '/:otherUser',
-        templateUrl: 'pages/private.html',
-        controller: function($stateParams, username){
-            console.log('Starting private chat');
-            console.log(username);
-            console.log($stateParams.otherUser);
-        }
+        templateUrl: 'pages/private.html'
     });
 });
 
@@ -76,4 +75,15 @@ privateChatApp.directive('modalFooter', function(){
         restrict: 'E',
         transclude: true
     };
+});
+
+privateChatApp.factory('webSocket', function (socketFactory, $location) {
+    var internalSocket = io.connect(buildUrl($location, ''));
+
+    var webSocket = socketFactory({
+        ioSocket: internalSocket
+    });
+
+    webSocket.forward('error');
+    return webSocket;
 });

@@ -5,6 +5,7 @@
 'use strict';
 
 var restify = require('restify');
+var socketIo = require('socket.io');
 
 var logger = console;
 var httpStatusCodes = require('./api/httpstatuscodes.js');
@@ -65,6 +66,14 @@ function startServer () {
         if (isNaN(port) || port < 0) {
             throw new Error('Port should be a valid positive number');
         }
+
+        var webSocket = socketIo.listen(server.server);
+
+        webSocket.sockets.on('connection', function (socket) {
+            socket.on('sendMessage', function (data) {
+                webSocket.sockets.emit('message/' + data.origin + '/' + data.target, data.value);
+            });
+        });
 
         server.listen(port, function (error) {
             if (error) {
