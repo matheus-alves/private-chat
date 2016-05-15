@@ -25,7 +25,8 @@ server.use(restify.bodyParser({mapParams: true}));
 // Controllers
 var controllersPath = './controllers/';
 var controllers = {
-    users: require(controllersPath + 'users.js')
+    users: require(controllersPath + 'users.js'),
+    messages: require(controllersPath + 'messages.js')
 };
 
 // Server configuration
@@ -38,7 +39,7 @@ server.pre(function (req, res, next) {
 // Requests configuration
 server.post('/register', controllers.users.registerUser);
 server.post('/login', controllers.users.authenticateUser);
-server.get('/users', controllers.users.getUsers);
+server.get('/users/:user', controllers.users.getUsers, controllers.messages.getUnreadMessagesCount);
 
 server.get('/', restify.serveStatic({
     directory: './static',
@@ -72,6 +73,8 @@ function startServer () {
         webSocket.sockets.on('connection', function (socket) {
             socket.on('sendMessage', function (data) {
                 webSocket.sockets.emit('message/' + data.origin + '/' + data.target, data.value);
+                webSocket.sockets.emit('newMessage/' + data.target, data.origin);
+                controllers.messages.addNewMessage(data);
             });
         });
 

@@ -152,15 +152,19 @@ function getUsers (req, res, next) {
             return sendDatabaseErrorResponse(res);
         }
 
-        var response = {};
+        var users = [];
 
         for (var item in results) {
             var user = results[item];
-
-            response[user.name] = 0; // number of messages will be fetched later
+            
+            if (user.name != req.params.user) {
+                users.push(user.name);
+            }
         }
+        
+        req.users = users;
 
-        return res.send(httpStatusCodes.OK, response);
+        return next();
     });
 }
 
