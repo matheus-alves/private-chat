@@ -5,6 +5,7 @@
   "dependencies": {
     "fnv-plus": "^1.2.12",
     "restify": "^4.0.4",
+    "socket.io": "^1.4.6",
     "sqlite3": "^3.1.3"
   }
 }
