@@ -1,0 +1,27 @@
+<!-- Custom styles for this template -->
+<link href="../css/signin.css" rel="stylesheet">
+
+<div class="container" ng-controller="login">
+
+    <form class="form-signin">
+        <h2 class="form-signin-heading">Private Chat</h2>
+        <label for="inputUsername" class="sr-only">Username</label>
+        <input id="inputUsername" class="form-control" ng-model="username" placeholder="Username" required autofocus>
+        <label for="inputPassword" class="sr-only">Password</label>
+        <input type="password" id="inputPassword" class="form-control" ng-model="password" placeholder="Password" required>
+        <div>
+            <button class="btn btn-lg btn-primary btn-block" type="submit" ng-click="validateLogin()">Login</button>
+            <button class="btn btn-lg btn-primary btn-block" type="submit" ng-click="validateRegistry()">Register</button>
+        </div>
+
+        <modal visible="showModal" backdrop="static"">
+            <modal-body>
+                <h4>{{modalText}}</h4>
+            </modal-body>
+            <modal-footer>
+                <button class="btn btn-primary" ng-click="hideModal()">OK</button>
+            </modal-footer>
+        </modal>
+    </form>
+
+</div>

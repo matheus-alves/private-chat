@@ -1,0 +1,8 @@
+# IDE-specific stuff:
+.idea/*
+
+# Node js libraries
+node_modules/*
+
+# Local database files
+database/privatechat.db
