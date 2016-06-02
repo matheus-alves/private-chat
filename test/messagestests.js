@@ -8,14 +8,17 @@ var test = require('tape');
 var httpMocks = require('node-mocks-http');
 var eventEmitter = require('events').EventEmitter;
 
-var logger = console;
+var mockDbConnection = require('./test_utils/mockdbconnection.js');
+var mockery = require('mockery');
+mockery.enable({
+    warnOnReplace: false,
+    warnOnUnregistered: false
+});
+mockery.registerMock('../database/dbconnection.js', mockDbConnection.getMock());
 
 var messages = require('../controllers/messages.js');
 var users = require('../controllers/users.js');
 var httpStatusCodes = require('../api/httpstatuscodes.js');
-
-var mockDbConnectionCreator = require('./test_utils/mockdbconnection.js');
-var mockDbConnection;
 
 function createMockMessage (origin, target, value) {
     return {
@@ -56,15 +59,9 @@ function createUsers (callback) {
 }
 
 function setUp() {
-    mockDbConnectionCreator.createDbConnection(function (dbConnection) {
-        if (!dbConnection) {
-            return logger.info('Error setting messages tests up');
-        }
-
-        mockDbConnection = dbConnection;
-
+    mockDbConnection.createDbConnection(function () {
         createUsers(function () {
-            messages.addNewMessage(createMockMessage('a', 'b', 'test'), mockDbConnection);
+            messages.addNewMessage(createMockMessage('a', 'b', 'test'));
 
             runTests();
         });
@@ -78,8 +75,6 @@ function runTests () {
         t.plan(4);
 
         var req = httpMocks.createRequest();
-
-        req.dbConnection = mockDbConnection;
         req.params.user = 'a';
         req.params.otherUser = 'b';
 
@@ -101,7 +96,6 @@ function runTests () {
         t.plan(1);
 
         var req = httpMocks.createRequest();
-        req.dbConnection = mockDbConnection;
         req.params.user = 'c';
         req.params.otherUser = 'b';
 
@@ -118,8 +112,6 @@ function runTests () {
         t.plan(1);
 
         var req = httpMocks.createRequest();
-        req.dbConnection = mockDbConnection;
-
         var res = httpMocks.createResponse({eventEmitter: eventEmitter});
 
         messages.getHistory(req, res);
@@ -133,7 +125,6 @@ function runTests () {
         t.plan(2);
 
         var req = httpMocks.createRequest();
-
         req.params.user = 'b';
         req.users = ['a'];
 
@@ -151,7 +142,6 @@ function runTests () {
         t.plan(2);
 
         var req = httpMocks.createRequest();
-
         req.params.user = 'a';
         req.users = ['b'];
 
@@ -169,7 +159,6 @@ function runTests () {
         t.plan(2);
 
         var req = httpMocks.createRequest();
-
         req.params.user = 'b';
         req.users = ['a'];
         req.query = {
@@ -190,7 +179,6 @@ function runTests () {
         t.plan(2);
 
         var req = httpMocks.createRequest();
-
         var res = httpMocks.createResponse();
 
         messages.getUnreadMessagesCount(req, res);
