@@ -9,7 +9,7 @@ var socketIo = require('socket.io');
 
 var logger = console;
 var httpStatusCodes = require('./api/httpstatuscodes.js');
-var dbConnection = require('./database/dbConnection.js');
+var dbConnection = require('./database/dbconnection.js');
 
 // Constants
 var DEFAULT_HTTP_PORT = 8080;
@@ -31,10 +31,6 @@ var controllers = {
 
 // Server configuration
 server.pre(restify.sanitizePath());
-server.pre(function (req, res, next) {
-    req.dbConnection = dbConnection.getConnection();
-    return next();
-});
 
 // Requests configuration
 server.post('/register', controllers.users.registerUser);

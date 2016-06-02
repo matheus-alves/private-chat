@@ -8,58 +8,32 @@ var fnv = require('fnv-plus');
 
 var logger = console;
 var httpStatusCodes = require('../api/httpstatuscodes.js');
-var utils = require('./utils.js');
 
-function fetchUser (dbConnection, username, callback) {
-    dbConnection.get('SELECT * FROM Users WHERE name = ?', username, function (error, row) {
-        if (error) {
-            logger.error('Error fetching user: %s', error);
-            return callback(error, null);
-        }
+var UsersRepository = require('../repository/usersrepository.js').UsersRepository;
+var usersRepository = new UsersRepository();
 
-        return callback(null, row);
-    });
+function fetchUser (username, callback) {
+    return usersRepository.get(username, callback);
 }
 
-function fetchUsers (dbConnection, callback) {
-    dbConnection.all('SELECT * FROM Users', function (error, rows) {
-        if (error) {
-            logger.error('Error fetching users: %s', error);
-            return callback(error, null);
-        }
-
-        return callback(null, rows);
-    });
+function fetchUsers (callback) {
+    return usersRepository.getAll(callback);
 }
 
-function insertUser (dbConnection, userInfo, callback) {
+function insertUser (userInfo, callback) {
     var passwordHash = fnv.hash(userInfo.password);
-
-    var data = [
-        userInfo.username,
-        passwordHash.dec()
-    ];
-
-    dbConnection.run('INSERT INTO Users (name, passwordHash) VALUES (?, ?)', data, function (error, row) {
-        if (error) {
-            logger.error('Error inserting user: %s', error);
-            return callback(error);
-        }
-
-        logger.info('User %s created', userInfo.username);
-
-        return callback(null);
-    });
+    
+    return usersRepository.create(userInfo.username, passwordHash.dec(), callback);
 }
 
-function checkIfUsernameAvailable (dbConnection, username, callback) {
-    dbConnection.get('SELECT * FROM Users WHERE name = ?', username, function (error, row) {
+function checkIfUsernameAvailable (username, callback) {
+    usersRepository.get(username, function (error, user) {
         if (error) {
             logger.error('Error checking if username is available: %s', error);
             return callback(error, null);
         }
 
-        if (row) {
+        if (user) {
             logger.info('Username %s already exists', username);
             return callback(null, false);
         }
@@ -69,15 +43,11 @@ function checkIfUsernameAvailable (dbConnection, username, callback) {
 }
 
 function registerUser (req, res, next) {
-    utils.validateDbConnection(req, res);
-
     logger.info('Received register user request');
-
-    utils.validateBody(req, res);
     
-    checkIfUsernameAvailable(req.dbConnection, req.body.username, function (error, available) {
+    checkIfUsernameAvailable(req.body.username, function (error, available) {
         if (error) {
-            return utils.sendDatabaseErrorResponse(res);
+            return res.send(httpStatusCodes.InternalServerError, error);
         }
 
         if (!available) {
@@ -86,9 +56,9 @@ function registerUser (req, res, next) {
             return res.send(httpStatusCodes.NotAcceptable, errorMessage);
         }
 
-        insertUser(req.dbConnection, req.body, function (error) {
+        insertUser(req.body, function (error) {
             if (error) {
-                return utils.sendDatabaseErrorResponse(res);
+                return res.send(httpStatusCodes.InternalServerError, error);
             }
 
             return res.send(httpStatusCodes.Created, '');
@@ -97,15 +67,11 @@ function registerUser (req, res, next) {
 }
 
 function authenticateUser (req, res, next) {
-    utils.validateDbConnection(req, res);
-
     logger.info('Received authenticate user request');
 
-    utils.validateBody(req, res);
-
-    fetchUser(req.dbConnection, req.body.username, function (error, result) {
+    fetchUser(req.body.username, function (error, result) {
         if (error) {
-            return utils.sendDatabaseErrorResponse(res);
+            return res.send(httpStatusCodes.InternalServerError, error);
         }
 
         if (result) {
@@ -124,11 +90,9 @@ function authenticateUser (req, res, next) {
 }
 
 function getUsers (req, res, next) {
-    utils.validateDbConnection(req, res);
-
-    fetchUsers(req.dbConnection, function (error, results) {
+    fetchUsers(function (error, results) {
         if (error) {
-            return utils.sendDatabaseErrorResponse(res);
+            return res.send(httpStatusCodes.InternalServerError, error);
         }
 
         var users = [];
@@ -150,6 +114,5 @@ function getUsers (req, res, next) {
 module.exports = {
     registerUser: registerUser,
     getUsers: getUsers,
-    authenticateUser: authenticateUser,
-    fetchUser: fetchUser
+    authenticateUser: authenticateUser
 };

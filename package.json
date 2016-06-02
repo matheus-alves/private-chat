@@ -14,6 +14,7 @@
   },
   "devDependencies": {
     "istanbul": "^0.4.3",
+    "mockery": "^1.7.0",
     "node-mocks-http": "^1.5.2",
     "tape": "^4.5.1"
   }
