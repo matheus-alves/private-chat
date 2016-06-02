@@ -8,45 +8,35 @@ var test = require('tape');
 var httpMocks = require('node-mocks-http');
 var eventEmitter = require('events').EventEmitter;
 
-var logger = console;
+var mockDbConnection = require('./test_utils/mockdbconnection.js');
+var mockery = require('mockery');
+mockery.enable({
+    warnOnReplace: false,
+    warnOnUnregistered: false
+});
+mockery.registerMock('../database/dbconnection.js', mockDbConnection.getMock());
 
 var users = require('../controllers/users.js');
 var httpStatusCodes = require('../api/httpstatuscodes.js');
-
-var mockDbConnectionCreator = require('./test_utils/mockdbconnection.js');
-var mockDbConnection;
-
-function setUp() {
-    mockDbConnectionCreator.createDbConnection(function (dbConnection) {
-        if (!dbConnection) {
-            return logger.info('Error setting users tests up');
-        }
-
-        mockDbConnection = dbConnection;
-        runTests();
-    });
-}
-
-setUp();
 
 function runTests () {
     test('registerUser - OK', function (t) {
         t.plan(1);
 
-        var req = httpMocks.createRequest();
+        mockDbConnection.createDbConnection(function () {
+            var req = httpMocks.createRequest();
+            req.body = {
+                username: 'a',
+                password: 'test'
+            };
 
-        req.dbConnection = mockDbConnection;
-        req.body = {
-            username: 'a',
-            password: 'test'
-        };
+            var res = httpMocks.createResponse({eventEmitter: eventEmitter});
 
-        var res = httpMocks.createResponse({eventEmitter: eventEmitter});
+            users.registerUser(req, res);
 
-        users.registerUser(req, res);
-
-        res.on('send', function () {
-            t.equal(res.statusCode, httpStatusCodes.Created);
+            res.on('send', function () {
+                t.equal(res.statusCode, httpStatusCodes.Created);
+            });
         });
     });
 
@@ -54,8 +44,6 @@ function runTests () {
         t.plan(1);
 
         var req = httpMocks.createRequest();
-
-        req.dbConnection = mockDbConnection;
         req.body = {
             username: 'a',
             password: 'test'
@@ -74,8 +62,6 @@ function runTests () {
         t.plan(1);
 
         var req = httpMocks.createRequest();
-
-        req.dbConnection = mockDbConnection;
         req.body = {
             password: 'test'
         };
@@ -93,9 +79,6 @@ function runTests () {
         t.plan(2);
 
         var req = httpMocks.createRequest();
-
-        req.dbConnection = mockDbConnection;
-
         var res = httpMocks.createResponse();
 
         users.getUsers(req, res, function () {
@@ -110,8 +93,6 @@ function runTests () {
         t.plan(4);
 
         var req = httpMocks.createRequest();
-
-        req.dbConnection = mockDbConnection;
         req.body = {
             username: 'b',
             password: 'test'
@@ -125,9 +106,6 @@ function runTests () {
             t.equal(res.statusCode, httpStatusCodes.Created);
 
             var req2 = httpMocks.createRequest();
-
-            req2.dbConnection = mockDbConnection;
-
             var res2 = httpMocks.createResponse();
 
             users.getUsers(req2, res2, function () {
@@ -144,8 +122,6 @@ function runTests () {
         t.plan(1);
 
         var req = httpMocks.createRequest();
-
-        req.dbConnection = mockDbConnection;
         req.body = {
             username: 'a',
             password: 'test'
@@ -164,8 +140,6 @@ function runTests () {
         t.plan(1);
 
         var req = httpMocks.createRequest();
-
-        req.dbConnection = mockDbConnection;
         req.body = {
             username: '',
             password: 'test'
@@ -184,8 +158,6 @@ function runTests () {
         t.plan(1);
 
         var req = httpMocks.createRequest();
-
-        req.dbConnection = mockDbConnection;
         req.body = {
             username: 'a',
             password: ''
@@ -200,3 +172,5 @@ function runTests () {
         });
     });
 }
+
+runTests();

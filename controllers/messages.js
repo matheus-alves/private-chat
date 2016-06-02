@@ -8,8 +8,12 @@ var Q = require('q');
 
 var logger = console;
 var httpStatusCodes = require('../api/httpstatuscodes.js');
-var utils = require('./utils');
-var users = require('./users');
+
+var UsersRepository = require('../repository/usersrepository.js').UsersRepository;
+var usersRepository = new UsersRepository();
+
+var MessagesRepository = require('../repository/messagesrepository.js').MessagesRepository;
+var messagesRepository = new MessagesRepository();
 
 var unreadMessagesMap = {};
 
@@ -56,33 +60,14 @@ function getUnreadMessagesCount (req, res, next) {
     return res.send(httpStatusCodes.OK, response);
 }
 
-function insertMessage (origin, target, value, dbConnection, callback) {
-    var data = [
-        origin,
-        target,
-        value
-    ];
-
-    dbConnection.run('INSERT INTO Messages (origin, target, message) VALUES (?, ?, ?)', data, function (error, row) {
-        if (error) {
-            logger.error('Error inserting message: %s', error);
-            return callback(error);
-        }
-
-        return callback(null);
-    });
+function insertMessage (message, callback) {
+    return messagesRepository.add(message.origin, message.target, message.value, callback);
 }
 
-function addNewMessage (message, dbConnection) {
-    if (!dbConnection) {
-        logger.error('Missing database connection');
-        return;
-    }
-
-    insertMessage(message.origin, message.target, message.value, dbConnection, function (error) {
+function addNewMessage (message) {
+    insertMessage(message, function (error) {
         if (error) {
-            logger.error('Error storing message');
-            return;
+            return logger.error('Error storing message');
         }
 
         increaseUnreadMessagesCount(message.target, message.origin);
@@ -90,30 +75,12 @@ function addNewMessage (message, dbConnection) {
     });
 }
 
-function retrieveMessages (user, otherUser, dbConnection, callback) {
+function retrieveMessages (user, otherUser, callback) {
     logger.info('Retrieving messages for users %s and %s', user, otherUser);
-
-    var data = [
-        user,
-        otherUser,
-        user,
-        otherUser
-    ];
-
-    dbConnection.all('SELECT * FROM Messages WHERE (origin = ? AND target = ?) OR (target = ? AND origin = ?)', data,
-        function (error, rows) {
-        if (error) {
-            logger.error('Error fetching messages: %s', error);
-            return callback(error, null);
-        }
-
-        return callback(null, rows);
-    });
+    return messagesRepository.getBetweenUsers(user, otherUser, callback);
 }
 
 function getHistory (req, res, next) {
-    utils.validateDbConnection(req, res);
-
     logger.info('Received get history request');
 
     var user = req.params.user;
@@ -121,7 +88,7 @@ function getHistory (req, res, next) {
 
     function handleUserFetch (username) {
         var deferred = Q.defer();
-        users.fetchUser(req.dbConnection, username, deferred.makeNodeResolver());
+        usersRepository.get(username, deferred.makeNodeResolver());
         return deferred.promise;
     }
 
@@ -142,13 +109,13 @@ function getHistory (req, res, next) {
                     return res.send(httpStatusCodes.Unauthorized, errorMessage);
                 }
             } else {
-                return utils.sendDatabaseErrorResponse(res);
+                return res.send(httpStatusCodes.InternalServerError, result.reason);
             }
         }
 
-        retrieveMessages(user, otherUser, req.dbConnection, function (error, messages) {
+        retrieveMessages(user, otherUser, function (error, messages) {
             if (error) {
-                return utils.sendDatabaseErrorResponse(res);
+                return res.send(httpStatusCodes.InternalServerError, error);
             }
 
             var response = [];

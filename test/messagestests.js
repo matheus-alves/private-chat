@@ -8,14 +8,17 @@ var test = require('tape');
 var httpMocks = require('node-mocks-http');
 var eventEmitter = require('events').EventEmitter;
 
-var logger = console;
+var mockDbConnection = require('./test_utils/mockdbconnection.js');
+var mockery = require('mockery');
+mockery.enable({
+    warnOnReplace: false,
+    warnOnUnregistered: false
+});
+mockery.registerMock('../database/dbconnection.js', mockDbConnection.getMock());
 
 var messages = require('../controllers/messages.js');
 var users = require('../controllers/users.js');
 var httpStatusCodes = require('../api/httpstatuscodes.js');
-
-var mockDbConnectionCreator = require('./test_utils/mockdbconnection.js');
-var mockDbConnection;
 
 function createMockMessage (origin, target, value) {
     return {
@@ -27,8 +30,6 @@ function createMockMessage (origin, target, value) {
 
 function createUsers (callback) {
     var req = httpMocks.createRequest();
-
-    req.dbConnection = mockDbConnection;
     req.body = {
         username: 'a',
         password: 'test'
@@ -55,45 +56,31 @@ function createUsers (callback) {
     });
 }
 
-function setUp() {
-    mockDbConnectionCreator.createDbConnection(function (dbConnection) {
-        if (!dbConnection) {
-            return logger.info('Error setting messages tests up');
-        }
-
-        mockDbConnection = dbConnection;
-
-        createUsers(function () {
-            messages.addNewMessage(createMockMessage('a', 'b', 'test'), mockDbConnection);
-
-            runTests();
-        });
-    });
-}
-
-setUp();
-
 function runTests () {
     test('getHistory - OK', function (t) {
         t.plan(4);
 
-        var req = httpMocks.createRequest();
+        mockDbConnection.createDbConnection(function () {
+            createUsers(function (){
+                messages.addNewMessage(createMockMessage('a', 'b', 'test'));
 
-        req.dbConnection = mockDbConnection;
-        req.params.user = 'a';
-        req.params.otherUser = 'b';
+                var req = httpMocks.createRequest();
+                req.params.user = 'a';
+                req.params.otherUser = 'b';
 
-        var res = httpMocks.createResponse({eventEmitter: eventEmitter});
+                var res = httpMocks.createResponse({eventEmitter: eventEmitter});
 
-        messages.getHistory(req, res);
+                messages.getHistory(req, res);
 
-        res.on('send', function() {
-            var history = res._getData();
+                res.on('send', function() {
+                    var history = res._getData();
 
-            t.equal(res.statusCode, httpStatusCodes.OK);
-            t.equal(history.length, 1);
-            t.equal(history[0].origin, 'a');
-            t.equal(history[0].value, 'test');
+                    t.equal(res.statusCode, httpStatusCodes.OK);
+                    t.equal(history.length, 1);
+                    t.equal(history[0].origin, 'a');
+                    t.equal(history[0].value, 'test');
+                });
+            });
         });
     });
 
@@ -101,7 +88,6 @@ function runTests () {
         t.plan(1);
 
         var req = httpMocks.createRequest();
-        req.dbConnection = mockDbConnection;
         req.params.user = 'c';
         req.params.otherUser = 'b';
 
@@ -118,8 +104,6 @@ function runTests () {
         t.plan(1);
 
         var req = httpMocks.createRequest();
-        req.dbConnection = mockDbConnection;
-
         var res = httpMocks.createResponse({eventEmitter: eventEmitter});
 
         messages.getHistory(req, res);
@@ -133,7 +117,6 @@ function runTests () {
         t.plan(2);
 
         var req = httpMocks.createRequest();
-
         req.params.user = 'b';
         req.users = ['a'];
 
@@ -151,7 +134,6 @@ function runTests () {
         t.plan(2);
 
         var req = httpMocks.createRequest();
-
         req.params.user = 'a';
         req.users = ['b'];
 
@@ -169,7 +151,6 @@ function runTests () {
         t.plan(2);
 
         var req = httpMocks.createRequest();
-
         req.params.user = 'b';
         req.users = ['a'];
         req.query = {
@@ -190,7 +171,6 @@ function runTests () {
         t.plan(2);
 
         var req = httpMocks.createRequest();
-
         var res = httpMocks.createResponse();
 
         messages.getUnreadMessagesCount(req, res);
@@ -201,3 +181,5 @@ function runTests () {
         t.deepEqual(unreadMessagesCount, {});
     });
 }
+
+runTests();
