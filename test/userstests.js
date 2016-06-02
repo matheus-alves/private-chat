@@ -19,30 +19,24 @@ mockery.registerMock('../database/dbconnection.js', mockDbConnection.getMock());
 var users = require('../controllers/users.js');
 var httpStatusCodes = require('../api/httpstatuscodes.js');
 
-function setUp() {
-    mockDbConnection.createDbConnection(function () {
-        runTests();
-    });
-}
-
-setUp();
-
 function runTests () {
     test('registerUser - OK', function (t) {
         t.plan(1);
 
-        var req = httpMocks.createRequest();
-        req.body = {
-            username: 'a',
-            password: 'test'
-        };
+        mockDbConnection.createDbConnection(function () {
+            var req = httpMocks.createRequest();
+            req.body = {
+                username: 'a',
+                password: 'test'
+            };
 
-        var res = httpMocks.createResponse({eventEmitter: eventEmitter});
+            var res = httpMocks.createResponse({eventEmitter: eventEmitter});
 
-        users.registerUser(req, res);
+            users.registerUser(req, res);
 
-        res.on('send', function () {
-            t.equal(res.statusCode, httpStatusCodes.Created);
+            res.on('send', function () {
+                t.equal(res.statusCode, httpStatusCodes.Created);
+            });
         });
     });
 
@@ -178,3 +172,5 @@ function runTests () {
         });
     });
 }
+
+runTests();

@@ -30,8 +30,6 @@ function createMockMessage (origin, target, value) {
 
 function createUsers (callback) {
     var req = httpMocks.createRequest();
-
-    req.dbConnection = mockDbConnection;
     req.body = {
         username: 'a',
         password: 'test'
@@ -58,37 +56,31 @@ function createUsers (callback) {
     });
 }
 
-function setUp() {
-    mockDbConnection.createDbConnection(function () {
-        createUsers(function () {
-            messages.addNewMessage(createMockMessage('a', 'b', 'test'));
-
-            runTests();
-        });
-    });
-}
-
-setUp();
-
 function runTests () {
     test('getHistory - OK', function (t) {
         t.plan(4);
 
-        var req = httpMocks.createRequest();
-        req.params.user = 'a';
-        req.params.otherUser = 'b';
+        mockDbConnection.createDbConnection(function () {
+            createUsers(function (){
+                messages.addNewMessage(createMockMessage('a', 'b', 'test'));
 
-        var res = httpMocks.createResponse({eventEmitter: eventEmitter});
+                var req = httpMocks.createRequest();
+                req.params.user = 'a';
+                req.params.otherUser = 'b';
 
-        messages.getHistory(req, res);
+                var res = httpMocks.createResponse({eventEmitter: eventEmitter});
 
-        res.on('send', function() {
-            var history = res._getData();
+                messages.getHistory(req, res);
 
-            t.equal(res.statusCode, httpStatusCodes.OK);
-            t.equal(history.length, 1);
-            t.equal(history[0].origin, 'a');
-            t.equal(history[0].value, 'test');
+                res.on('send', function() {
+                    var history = res._getData();
+
+                    t.equal(res.statusCode, httpStatusCodes.OK);
+                    t.equal(history.length, 1);
+                    t.equal(history[0].origin, 'a');
+                    t.equal(history[0].value, 'test');
+                });
+            });
         });
     });
 
@@ -189,3 +181,5 @@ function runTests () {
         t.deepEqual(unreadMessagesCount, {});
     });
 }
+
+runTests();
