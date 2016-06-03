@@ -12,6 +12,8 @@ var httpStatusCodes = require('../api/httpstatuscodes.js');
 var UsersRepository = require('../repository/usersrepository.js').UsersRepository;
 var usersRepository = new UsersRepository();
 
+var accessTokenGenerator = require('./accesstoken.js');
+
 function fetchUser (username, callback) {
     return usersRepository.get(username, callback);
 }
@@ -61,7 +63,9 @@ function registerUser (req, res, next) {
                 return res.send(httpStatusCodes.InternalServerError, error);
             }
 
-            return res.send(httpStatusCodes.Created, '');
+            return res.send(httpStatusCodes.Created, {
+                token: accessTokenGenerator.generateAccessToken(req.body.username, req.body.password)
+            });
         });
     });
 }
@@ -79,7 +83,9 @@ function authenticateUser (req, res, next) {
 
             if (passwordHash.dec() === result.passwordHash) {
                 logger.info('User %s successfully authenticated', result.name);
-                return res.send(httpStatusCodes.OK, '');
+                return res.send(httpStatusCodes.OK, {
+                    token: accessTokenGenerator.generateAccessToken(req.body.username, req.body.password)
+                });
             }
         }
 
