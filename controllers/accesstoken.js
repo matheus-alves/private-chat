@@ -11,7 +11,7 @@ var httpStatusCodes = require('../api/httpstatuscodes.js');
 var secret = 'private-chat-secret';
 
 function validateAccessToken (req, res, next) {
-    var token = req.headers['Authorization'] ;
+    var token = req.headers['authorization'] ;
 
     if (token) {
         jwt.verify(token, secret, function(error, decoded) {

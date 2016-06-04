@@ -16,7 +16,7 @@ function runTests () {
         t.plan(1);
 
         var req = httpMocks.createRequest();
-        req.headers['Authorization'] = jwt.sign('username + password', 'private-chat-secret');
+        req.headers['authorization'] = jwt.sign('username + password', 'private-chat-secret');
 
         var res = httpMocks.createResponse();
 
@@ -40,7 +40,7 @@ function runTests () {
         t.plan(1);
 
         var req = httpMocks.createRequest();
-        req.headers['Authorization'] = 'test';
+        req.headers['authorization'] = 'test';
 
         var res = httpMocks.createResponse({eventEmitter: eventEmitter});
 

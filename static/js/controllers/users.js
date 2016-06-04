@@ -7,11 +7,20 @@
 // Constants
 var GET_USERS_TIMEOUT = 5000; //five seconds
 
-function UsersController ($scope, $state, $stateParams, $http, $location, $timeout, webSocket) {
+function UsersController ($scope, $state, $stateParams, $http, $location, $timeout, webSocket, $cookieStore) {
     $scope.users = {};
 
+    // To recover conversation on page refresh
+    if ($cookieStore.get('otherUser')) {
+        $stateParams.otherUser = $cookieStore.get('otherUser');
+    }
+
     function getUsers () {
-        $http.get(buildUrl($location, '/users/' + $stateParams.username + '?otherUser=' + $stateParams.otherUser)).
+        var config = createHeaders($cookieStore);
+
+        $http.get(
+            buildUrl($location, '/users/' + $cookieStore.get('username') + '?otherUser=' + $stateParams.otherUser),
+            config).
         then(function(response) {
             for (var user in response.data) {
                 $scope.users[user] = response.data[user];
@@ -19,12 +28,12 @@ function UsersController ($scope, $state, $stateParams, $http, $location, $timeo
 
             $timeout(getUsers, GET_USERS_TIMEOUT);
         }, function(error) {
-            alert('Error fetching users');
+            alert('Error fetching users: ' + error.data);
         });
     }
     getUsers();
 
-    webSocket.on('newMessage/' + $stateParams.username, function (data) {
+    webSocket.on('newMessage/' + $cookieStore.get('username'), function (data) {
         if (data != $stateParams.otherUser) { // only count unread messages
             $scope.users[data]++;
         }
@@ -32,6 +41,7 @@ function UsersController ($scope, $state, $stateParams, $http, $location, $timeo
 
     $scope.selectUser = function (selectedUser) {
         $scope.users[selectedUser] = 0;
+        $cookieStore.put('otherUser', selectedUser);
         $state.go('chat.private', {otherUser: selectedUser});
     }
 }

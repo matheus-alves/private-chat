@@ -10,8 +10,8 @@
         <label for="inputPassword" class="sr-only">Password</label>
         <input type="password" id="inputPassword" class="form-control" ng-model="password" placeholder="Password" required>
         <div>
-            <button class="btn btn-lg btn-primary btn-block" type="submit" ng-click="validateLogin()">Login</button>
-            <button class="btn btn-lg btn-primary btn-block" type="submit" ng-click="validateRegistry()">Register</button>
+            <button class="btn btn-lg btn-primary btn-block" type="submit" ng-click="validate('login')">Login</button>
+            <button class="btn btn-lg btn-primary btn-block" type="submit" ng-click="validate('register')">Register</button>
         </div>
 
         <modal visible="showModal" backdrop="static"">
