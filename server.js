@@ -26,7 +26,8 @@ server.use(restify.bodyParser({mapParams: true}));
 var controllersPath = './controllers/';
 var controllers = {
     users: require(controllersPath + 'users.js'),
-    messages: require(controllersPath + 'messages.js')
+    messages: require(controllersPath + 'messages.js'),
+    accessToken: require(controllersPath + 'accesstoken.js')
 };
 
 // Server configuration
@@ -35,8 +36,9 @@ server.pre(restify.sanitizePath());
 // Requests configuration
 server.post('/register', controllers.users.registerUser);
 server.post('/login', controllers.users.authenticateUser);
-server.get('/users/:user', controllers.users.getUsers, controllers.messages.getUnreadMessagesCount);
-server.get('/history/:user/:otherUser', controllers.messages.getHistory);
+server.get('/users/:user', controllers.accessToken.validateAccessToken, controllers.users.getUsers, 
+    controllers.messages.getUnreadMessagesCount);
+server.get('/history/:user/:otherUser', controllers.accessToken.validateAccessToken, controllers.messages.getHistory);
 
 server.get('/', restify.serveStatic({
     directory: './static',

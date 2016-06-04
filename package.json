@@ -4,6 +4,7 @@
   "main": "server.js",
   "dependencies": {
     "fnv-plus": "^1.2.12",
+    "jsonwebtoken": "^7.0.0",
     "q": "^1.4.1",
     "restify": "^4.0.4",
     "socket.io": "^1.4.6",

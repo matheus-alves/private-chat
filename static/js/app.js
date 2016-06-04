@@ -7,7 +7,8 @@
 var privateChatApp = angular.module('privateChat', [
     'ui.router',
     'luegg.directives',
-    'btford.socket-io'
+    'btford.socket-io',
+    'ngCookies'
 ]);
 
 privateChatApp.config(function($stateProvider, $urlRouterProvider) {
@@ -18,15 +19,7 @@ privateChatApp.config(function($stateProvider, $urlRouterProvider) {
         templateUrl: 'pages/login.html'
     }).state('chat', {
         url: '/chat',
-        params: {
-            username: null
-        },
-        templateUrl: 'pages/chat.html',
-        resolve: {
-            username: ['$stateParams', function ($stateParams) {
-                return $stateParams.username;
-            }]
-        }
+        templateUrl: 'pages/chat.html'
     }).state('chat.private', {
         url: '/:otherUser',
         templateUrl: 'pages/private.html'

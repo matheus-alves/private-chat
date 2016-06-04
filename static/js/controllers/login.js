@@ -4,7 +4,7 @@
 
 'use strict';
 
-function LoginController ($scope, $state, $http, $location) {
+function LoginController ($scope, $state, $http, $location, $cookieStore) {
     $scope.showModal = false;
     $scope.modalText = '';
 
@@ -30,37 +30,34 @@ function LoginController ($scope, $state, $http, $location) {
         return false;
     }
 
-    $scope.validateLogin = function () {
+    $scope.validate = function (type) {
         if (!validateParams()) {
             showModal('Please provide a valid username and password');
         } else {
-            var loginData = {
+            var data = {
                 username: $scope.username,
                 password: $scope.password
             };
 
-            $http.post(buildUrl($location, '/login'), loginData).
-            then(function(response) {
-                $state.go('chat', {username: $scope.username});
-            }, function(error) {
-                showModal('Error authenticating user : ' + error.data);
-            });
-        }
-    };
-    $scope.validateRegistry = function () {
-        if (!validateParams()) {
-            showModal('Please provide a valid username and password');
-        } else {
-            var registryData = {
-                username: $scope.username,
-                password: $scope.password
-            };
+            var path;
+            var errorMessage;
 
-            $http.post(buildUrl($location, '/register'), registryData).
+            if (type === 'login') {
+                path = '/login';
+                errorMessage = 'Error authenticating user : ';
+            } else if (type === 'register') {
+                path = '/register';
+                errorMessage = 'Error registering user : ';
+            }
+
+            $http.post(buildUrl($location, path), data).
             then(function(response) {
-                $state.go('chat', {username: $scope.username});
+                $cookieStore.put('token', response.data.token);
+                $cookieStore.put('username', $scope.username);
+                
+                $state.go('chat');
             }, function(error) {
-                showModal('Error registering user : ' + error.data);
+                showModal(errorMessage + error.data);
             });
         }
     };
