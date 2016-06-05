@@ -4,20 +4,32 @@
 
 'use strict';
 
-function PrivateChatController ($scope, $stateParams, $http, $location, webSocket) {
+function PrivateChatController ($scope, $stateParams, $http, $location, webSocket, $cookieStore, $state) {
     $scope.messages = [];
 
+    // Validate if user is logged in
+    if (!validateUserCookies($cookieStore)) {
+        return $state.go('login');
+    }
+    
+    // To recover conversation on page refresh
+    if ($cookieStore.get('otherUser')) {
+        $stateParams.otherUser = $cookieStore.get('otherUser');
+    }
+
     function getHistory () {
-        $http.get(buildUrl($location, '/history/' + $stateParams.username + '/' + $stateParams.otherUser)).
+        var config = createHeaders($cookieStore);
+        
+        $http.get(buildUrl($location, '/history/' + $cookieStore.get('username') + '/' + $stateParams.otherUser), config).
         then(function(response) {
             $scope.messages = response.data;
         }, function(error) {
-            alert('Error fetching history');
+            alert('Error fetching history: ' + error.data);
         });
     }
     getHistory();
 
-    webSocket.on('message/' + $stateParams.otherUser + '/' + $stateParams.username, function (data) {
+    webSocket.on('message/' + $stateParams.otherUser + '/' + $cookieStore.get('username'), function (data) {
         $scope.messages.push({origin: $stateParams.otherUser, value: data});
     });
 
@@ -26,12 +38,12 @@ function PrivateChatController ($scope, $stateParams, $http, $location, webSocke
 
         if ($scope.typedMessage.length > 0) {
             webSocket.emit('sendMessage', {
-                origin: $stateParams.username,
+                origin: $cookieStore.get('username'),
                 target: $stateParams.otherUser,
                 value: $scope.typedMessage
             });
 
-            $scope.messages.push({origin: $stateParams.username, value: $scope.typedMessage});
+            $scope.messages.push({origin: $cookieStore.get('username'), value: $scope.typedMessage});
             $scope.typedMessage = '';
         }
     };

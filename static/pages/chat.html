@@ -6,6 +6,10 @@
         <div class="navbar-header">
             <a class="navbar-brand">Users</a>
         </div>
+        <div class="right" ng-app="privateChat" ng-controller="users">
+            <a class="right-a center" ng-click="logout()">Logout</a>
+            <a class="navbar-brand right-a">{{username}}</a>
+        </div>
     </div>
 </nav>
 

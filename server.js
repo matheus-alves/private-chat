@@ -9,7 +9,7 @@ var socketIo = require('socket.io');
 
 var logger = console;
 var httpStatusCodes = require('./api/httpstatuscodes.js');
-var dbConnection = require('./database/dbConnection.js');
+var dbConnection = require('./database/dbconnection.js');
 
 // Constants
 var DEFAULT_HTTP_PORT = 8080;
@@ -26,21 +26,19 @@ server.use(restify.bodyParser({mapParams: true}));
 var controllersPath = './controllers/';
 var controllers = {
     users: require(controllersPath + 'users.js'),
-    messages: require(controllersPath + 'messages.js')
+    messages: require(controllersPath + 'messages.js'),
+    accessToken: require(controllersPath + 'accesstoken.js')
 };
 
 // Server configuration
 server.pre(restify.sanitizePath());
-server.pre(function (req, res, next) {
-    req.dbConnection = dbConnection.getConnection();
-    return next();
-});
 
 // Requests configuration
 server.post('/register', controllers.users.registerUser);
 server.post('/login', controllers.users.authenticateUser);
-server.get('/users/:user', controllers.users.getUsers, controllers.messages.getUnreadMessagesCount);
-server.get('/history/:user/:otherUser', controllers.messages.getHistory);
+server.get('/users/:user', controllers.accessToken.validateAccessToken, controllers.users.getUsers, 
+    controllers.messages.getUnreadMessagesCount);
+server.get('/history/:user/:otherUser', controllers.accessToken.validateAccessToken, controllers.messages.getHistory);
 
 server.get('/', restify.serveStatic({
     directory: './static',
@@ -74,7 +72,7 @@ function startServer () {
         webSocket.sockets.on('connection', function (socket) {
             socket.on('sendMessage', function (data) {
                 webSocket.sockets.emit('message/' + data.origin + '/' + data.target, data.value);
-                webSocket.sockets.emit('newMessage/' + data.target, data.origin);
+                webSocket.sockets.emit('updateUnreadMessages/' + data.target, data.origin);
                 controllers.messages.addNewMessage(data, dbConnection.getConnection());
             });
         });

@@ -6,3 +6,9 @@ node_modules/*
 
 # Local database files
 database/privatechat.db
+
+# Test coverage
+coverage/*
+
+# NPM logs
+npm-debug.log

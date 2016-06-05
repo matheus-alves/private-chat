@@ -7,26 +7,28 @@
 var privateChatApp = angular.module('privateChat', [
     'ui.router',
     'luegg.directives',
-    'btford.socket-io'
+    'btford.socket-io',
+    'ngCookies'
 ]);
 
 privateChatApp.config(function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.otherwise('/login');
+    var $cookieStore;
+    angular.injector(['ngCookies']).invoke(['$cookieStore', function(_$cookieStore_) {
+        $cookieStore = _$cookieStore_;
+    }]);
+
+    if($cookieStore.get('username') && $cookieStore.get('token')) {
+        $urlRouterProvider.otherwise('/chat');
+    } else {
+        $urlRouterProvider.otherwise('/login');
+    }
 
     $stateProvider.state('login', {
         url: '/login',
         templateUrl: 'pages/login.html'
     }).state('chat', {
         url: '/chat',
-        params: {
-            username: null
-        },
-        templateUrl: 'pages/chat.html',
-        resolve: {
-            username: ['$stateParams', function ($stateParams) {
-                return $stateParams.username;
-            }]
-        }
+        templateUrl: 'pages/chat.html'
     }).state('chat.private', {
         url: '/:otherUser',
         templateUrl: 'pages/private.html'
