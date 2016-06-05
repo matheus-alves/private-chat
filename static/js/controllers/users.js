@@ -45,7 +45,7 @@ function UsersController ($scope, $state, $stateParams, $http, $location, $timeo
     }
     getUsers();
 
-    webSocket.on('newMessage/' + $cookieStore.get('username'), function (data) {
+    webSocket.on('updateUnreadMessages/' + $cookieStore.get('username'), function (data) {
         if (data != $stateParams.otherUser) { // only count unread messages
             $scope.users[data]++;
         }
