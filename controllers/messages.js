@@ -80,17 +80,41 @@ function retrieveMessages (user, otherUser, callback) {
     return messagesRepository.getBetweenUsers(user, otherUser, callback);
 }
 
+function handleMessageRetrieval (user, otherUser, res) {
+    retrieveMessages(user, otherUser, function (error, messages) {
+        if (error) {
+            return res.send(httpStatusCodes.InternalServerError, error);
+        }
+
+        var response = [];
+
+        for (var item in messages) {
+            var messageItem = {};
+
+            var message = messages[item];
+            messageItem.origin = message.origin;
+            messageItem.value = message.message;
+
+            response.push(messageItem);
+        }
+
+        clearUnreadMessagesCount(user, otherUser);
+
+        return res.send(httpStatusCodes.OK, response);
+    });
+}
+
+function handleUserFetch (username) {
+    var deferred = Q.defer();
+    usersRepository.get(username, deferred.makeNodeResolver());
+    return deferred.promise;
+}
+
 function getHistory (req, res, next) {
     logger.info('Received get history request');
 
     var user = req.params.user;
     var otherUser = req.params.otherUser;
-
-    function handleUserFetch (username) {
-        var deferred = Q.defer();
-        usersRepository.get(username, deferred.makeNodeResolver());
-        return deferred.promise;
-    }
 
     var promises = [];
     promises.push(handleUserFetch(user));
@@ -113,27 +137,7 @@ function getHistory (req, res, next) {
             }
         }
 
-        retrieveMessages(user, otherUser, function (error, messages) {
-            if (error) {
-                return res.send(httpStatusCodes.InternalServerError, error);
-            }
-
-            var response = [];
-
-            for (var item in messages) {
-                var messageItem = {};
-
-                var message = messages[item];
-                messageItem.origin = message.origin;
-                messageItem.value = message.message;
-
-                response.push(messageItem);
-            }
-
-            clearUnreadMessagesCount(user, otherUser);
-
-            return res.send(httpStatusCodes.OK, response);
-        });
+        handleMessageRetrieval(user, otherUser, res);
     });
 }
 
