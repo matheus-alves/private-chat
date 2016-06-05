@@ -35,7 +35,7 @@ function UsersController ($scope, $state, $stateParams, $http, $location, $timeo
             config).
         then(function(response) {
             for (var user in response.data) {
-                $scope.users[user] = typeof response.data[user] == 'number' ? response.data[user] : 0;
+                $scope.users[user] = response.data[user];
             }
 
             promise = $timeout(getUsers, GET_USERS_TIMEOUT);
@@ -49,7 +49,7 @@ function UsersController ($scope, $state, $stateParams, $http, $location, $timeo
 
     webSocket.on('updateUnreadMessages/' + $cookieStore.get('username'), function (data) {
         if (data != $stateParams.otherUser) { // only count unread messages
-            $scope.users[data]++;
+            $scope.users[data] = $scope.users[data] ? $scope.users[data] + 1 : 1;
         }
     });
 
