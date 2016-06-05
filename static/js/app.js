@@ -12,7 +12,16 @@ var privateChatApp = angular.module('privateChat', [
 ]);
 
 privateChatApp.config(function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.otherwise('/login');
+    var $cookieStore;
+    angular.injector(['ngCookies']).invoke(['$cookieStore', function(_$cookieStore_) {
+        $cookieStore = _$cookieStore_;
+    }]);
+
+    if($cookieStore.get('username') && $cookieStore.get('token')) {
+        $urlRouterProvider.otherwise('/chat');
+    } else {
+        $urlRouterProvider.otherwise('/login');
+    }
 
     $stateProvider.state('login', {
         url: '/login',
