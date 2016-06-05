@@ -35,12 +35,14 @@ function UsersController ($scope, $state, $stateParams, $http, $location, $timeo
             config).
         then(function(response) {
             for (var user in response.data) {
-                $scope.users[user] = response.data[user];
+                $scope.users[user] = typeof response.data[user] == 'number' ? response.data[user] : 0;
             }
 
             promise = $timeout(getUsers, GET_USERS_TIMEOUT);
         }, function(error) {
-            alert('Error fetching users: ' + error.data);
+            if (validateUserCookies($cookieStore)) {
+                alert('Error fetching users: ' + error.data);
+            }
         });
     }
     getUsers();
