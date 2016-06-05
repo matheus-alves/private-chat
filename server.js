@@ -72,7 +72,7 @@ function startServer () {
         webSocket.sockets.on('connection', function (socket) {
             socket.on('sendMessage', function (data) {
                 webSocket.sockets.emit('message/' + data.origin + '/' + data.target, data.value);
-                webSocket.sockets.emit('newMessage/' + data.target, data.origin);
+                webSocket.sockets.emit('updateUnreadMessages/' + data.target, data.origin);
                 controllers.messages.addNewMessage(data, dbConnection.getConnection());
             });
         });

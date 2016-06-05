@@ -28,6 +28,18 @@ function insertUser (userInfo, callback) {
     return usersRepository.create(userInfo.username, passwordHash.dec(), callback);
 }
 
+function handleUserInsertion (req, res) {
+    insertUser(req.body, function (error) {
+        if (error) {
+            return res.send(httpStatusCodes.InternalServerError, error);
+        }
+
+        return res.send(httpStatusCodes.Created, {
+            token: accessTokenGenerator.generateAccessToken(req.body.username, req.body.password)
+        });
+    });
+}
+
 function checkIfUsernameAvailable (username, callback) {
     usersRepository.get(username, function (error, user) {
         if (error) {
@@ -58,58 +70,56 @@ function registerUser (req, res, next) {
             return res.send(httpStatusCodes.NotAcceptable, errorMessage);
         }
 
-        insertUser(req.body, function (error) {
-            if (error) {
-                return res.send(httpStatusCodes.InternalServerError, error);
-            }
-
-            return res.send(httpStatusCodes.Created, {
-                token: accessTokenGenerator.generateAccessToken(req.body.username, req.body.password)
-            });
-        });
+        handleUserInsertion(req, res);
     });
+}
+
+function validatePassword (user, req, res) {
+    var passwordHash = fnv.hash(req.body.password);
+
+    if (passwordHash.dec() === user.passwordHash) {
+        logger.info('User %s successfully authenticated', user.name);
+        return res.send(httpStatusCodes.OK, {
+            token: accessTokenGenerator.generateAccessToken(req.body.username, req.body.password)
+        });
+    } else {
+        var errorMessage = 'Invalid password';
+        logger.error(errorMessage);
+        return res.send(httpStatusCodes.Unauthorized, errorMessage);
+    }
 }
 
 function authenticateUser (req, res, next) {
     logger.info('Received authenticate user request');
 
-    fetchUser(req.body.username, function (error, result) {
+    fetchUser(req.body.username, function (error, user) {
         if (error) {
             return res.send(httpStatusCodes.InternalServerError, error);
         }
 
-        if (result) {
-            var passwordHash = fnv.hash(req.body.password);
-
-            if (passwordHash.dec() === result.passwordHash) {
-                logger.info('User %s successfully authenticated', result.name);
-                return res.send(httpStatusCodes.OK, {
-                    token: accessTokenGenerator.generateAccessToken(req.body.username, req.body.password)
-                });
-            }
+        if (user) {
+            validatePassword(user, req, res);
+        } else {
+            var errorMessage = 'Invalid username';
+            logger.error(errorMessage);
+            return res.send(httpStatusCodes.Unauthorized, errorMessage);
         }
-
-        var errorMessage = 'Invalid username or password';
-        logger.error(errorMessage);
-        return res.send(httpStatusCodes.Unauthorized, errorMessage);
     });
 }
 
 function getUsers (req, res, next) {
-    fetchUsers(function (error, results) {
+    fetchUsers(function (error, retrievedUsers) {
         if (error) {
             return res.send(httpStatusCodes.InternalServerError, error);
         }
 
         var users = [];
 
-        for (var item in results) {
-            var user = results[item];
-            
+        retrievedUsers.forEach( function (user) {
             if (user.name != req.params.user) {
                 users.push(user.name);
             }
-        }
+        });
         
         req.users = users;
 
