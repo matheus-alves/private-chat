@@ -15,3 +15,7 @@ function createHeaders ($cookieStore) {
         }
     };
 }
+
+function validateUserCookies ($cookieStore) {
+    return ($cookieStore.get('username') && $cookieStore.get('token'));
+}

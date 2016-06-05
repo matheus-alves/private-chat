@@ -9,7 +9,19 @@ var GET_USERS_TIMEOUT = 5000; //five seconds
 
 function UsersController ($scope, $state, $stateParams, $http, $location, $timeout, webSocket, $cookieStore) {
     $scope.users = {};
+    $scope.username = $cookieStore.get('username');
+    var promise;
 
+    // Stop polling on page change
+    $scope.$on('$locationChangeStart', function(){
+        $timeout.cancel(promise);
+    });
+
+    // Validate if user is logged in
+    if (!validateUserCookies($cookieStore)) {
+        return $state.go('login');
+    }
+    
     // To recover conversation on page refresh
     if ($cookieStore.get('otherUser')) {
         $stateParams.otherUser = $cookieStore.get('otherUser');
@@ -26,7 +38,7 @@ function UsersController ($scope, $state, $stateParams, $http, $location, $timeo
                 $scope.users[user] = response.data[user];
             }
 
-            $timeout(getUsers, GET_USERS_TIMEOUT);
+            promise = $timeout(getUsers, GET_USERS_TIMEOUT);
         }, function(error) {
             alert('Error fetching users: ' + error.data);
         });
@@ -43,7 +55,15 @@ function UsersController ($scope, $state, $stateParams, $http, $location, $timeo
         $scope.users[selectedUser] = 0;
         $cookieStore.put('otherUser', selectedUser);
         $state.go('chat.private', {otherUser: selectedUser});
-    }
+    };
+
+    $scope.logout = function () {
+        $cookieStore.remove('username');
+        $cookieStore.remove('token');
+        $cookieStore.remove('otherUser');
+
+        $state.go('login');
+    };
 }
 
 angular.module('privateChat').controller('users', UsersController);

@@ -4,8 +4,13 @@
 
 'use strict';
 
-function PrivateChatController ($scope, $stateParams, $http, $location, webSocket, $cookieStore) {
+function PrivateChatController ($scope, $stateParams, $http, $location, webSocket, $cookieStore, $state) {
     $scope.messages = [];
+
+    // Validate if user is logged in
+    if (!validateUserCookies($cookieStore)) {
+        return $state.go('login');
+    }
     
     // To recover conversation on page refresh
     if ($cookieStore.get('otherUser')) {
