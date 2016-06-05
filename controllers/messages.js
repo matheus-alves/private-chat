@@ -51,7 +51,7 @@ function getUnreadMessagesCount (req, res, next) {
         // auto-read current chat messages
         unreadMessagesMap[req.params.user][otherUser] = 0;
     }
-    
+
     for (var item in users) {
         response[users[item]] = 
             unreadMessagesMap[req.params.user][users[item]] ? unreadMessagesMap[req.params.user][users[item]] : 0;
@@ -88,15 +88,14 @@ function handleMessageRetrieval (user, otherUser, res) {
 
         var response = [];
 
-        for (var item in messages) {
+        messages.forEach( function (message) {
             var messageItem = {};
 
-            var message = messages[item];
             messageItem.origin = message.origin;
             messageItem.value = message.message;
 
             response.push(messageItem);
-        }
+        });
 
         clearUnreadMessagesCount(user, otherUser);
 

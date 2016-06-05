@@ -108,20 +108,18 @@ function authenticateUser (req, res, next) {
 }
 
 function getUsers (req, res, next) {
-    fetchUsers(function (error, results) {
+    fetchUsers(function (error, retrievedUsers) {
         if (error) {
             return res.send(httpStatusCodes.InternalServerError, error);
         }
 
         var users = [];
 
-        for (var item in results) {
-            var user = results[item];
-            
+        retrievedUsers.forEach( function (user) {
             if (user.name != req.params.user) {
                 users.push(user.name);
             }
-        }
+        });
         
         req.users = users;
 
